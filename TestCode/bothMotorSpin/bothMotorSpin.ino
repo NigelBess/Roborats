@@ -3,7 +3,7 @@
 AF_DCMotor rightMotor(3,MOTOR34_1KHZ);
 AF_DCMotor leftMotor(4,MOTOR34_1KHZ);
 
-int motorSpeed = 200;//out of 255
+int motorSpeed = 255;//out of 255
 int pauseTime = 1000;//ms
 
 void setup() 
