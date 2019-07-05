@@ -14,7 +14,7 @@ void setup()
 
 void loop() 
 {
-  printValue(analogRead(inputD120),analogRead(inputYAO21));
+  printValue(0,analogRead(inputYAO21));
 }
 void printValue(int value,int value2)
 {

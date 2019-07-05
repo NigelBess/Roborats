@@ -3,7 +3,7 @@
 //used to decrease Serial print rate
 const int serialRefreshTime = 1000;//ms
 unsigned long int lastPrintTime = 0;
-float calibrationConstants[] = {-.1062,41.9419};
+float calibrationConstants[] = {200,-.0416};
 
 void setup() 
 {
@@ -27,5 +27,5 @@ void printValue(float value)
 }
 float analogVoltageToDistance(int signal, float *constants)
 {
-  return float(signal)*constants[0]+constants[1];
+  return constants[0] * exp(signal*(constants[1]));
 }

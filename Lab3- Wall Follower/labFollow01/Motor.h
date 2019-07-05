@@ -7,10 +7,15 @@ class Motor
   AF_DCMotor *motorObj = 0;
   int nominalVel = 0;
   float delta = 0;
+  bool reverse = false;
   void applyVel()
   {
     int vel = nominalVel + int(delta);
     (*motorObj).setSpeed(min(abs(vel),255));
+    if (reverse)
+    {
+      vel = -vel;
+    }
     if (vel>0)
     {
       (*motorObj).run(FORWARD);
@@ -22,7 +27,17 @@ class Motor
   public:
   Motor(int pin)
   {
-    if (pin<3)
+   setPin(pin);
+  }
+  
+  Motor(int pin, bool runReverse)
+  {
+    setPin(pin);
+    reverse = runReverse;
+  }
+  void setPin(int pin)
+  {
+     if (pin<3)
     {
       motorObj = new AF_DCMotor(pin,MOTOR12_1KHZ);
     } else
