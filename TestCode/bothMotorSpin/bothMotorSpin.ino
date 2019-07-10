@@ -10,14 +10,16 @@ void setup()
 {
   rightMotor.setSpeed(motorSpeed);
   leftMotor.setSpeed(motorSpeed);
+  rightMotor.run(FORWARD);
+  leftMotor.run(BACKWARD);
 }
 
 void loop() 
 {
-  rightMotor.run(FORWARD);
-  leftMotor.run(FORWARD);
-  delay(pauseTime);
-  leftMotor.run(BACKWARD);
-  rightMotor.run(BACKWARD);
-  delay(pauseTime);
+//  rightMotor.run(FORWARD);
+//  leftMotor.run(FORWARD);
+//  delay(pauseTime);
+//  leftMotor.run(BACKWARD);
+//  rightMotor.run(BACKWARD);
+//  delay(pauseTime);
 }
