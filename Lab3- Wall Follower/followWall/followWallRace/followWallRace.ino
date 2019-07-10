@@ -10,8 +10,9 @@
 
 //create custom motor objects for both motors
 //Motor(pin, reversePolarity?)
-Motor leftMotor(4,true);
-Motor rightMotor(3,false);
+Motor leftMotor(1,true);
+Motor rightMotor(2
+,false);
 
 //imperical data of the form {voltage reading (int), distance (cm)} 
 //used to get distance from sensor reading
@@ -24,10 +25,10 @@ int maxDelta = 510;
 //this script uses proportional control to maintain distance to the wall
 //the controller was discretized into two regions, one for when the robot is too close,
 //and one for when it is too far. The two gains for the proportional controller are defined below
-float k = 5;
+float k = 6;
 
 //wall follower target distance to wall (cm)
-float targetDistance = 43.0;
+float targetDistance = 45.0;
 
 
 //if the reading from the photoresistor drops below this value, start the wall following sequence
@@ -57,9 +58,9 @@ void setup()
   pinMode(photoResPin, INPUT_PULLUP);
 
   //wait until we sense the light
-//  while(analogRead(photoResPin)>photoResThreshold)
-//  {
-//  }
+  while(analogRead(photoResPin)>photoResThreshold)
+  {
+  }
 
    //start moving forward at default velocity without turning
   resetVel();
