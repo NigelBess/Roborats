@@ -2,7 +2,7 @@
 #include "Motor.h"
 #include "math.h"
 
-#define debug true //do we want to print to the serial monitor?
+#define debug false //do we want to print to the serial monitor?
 
 //pinouts
 #define photoResPin A2
@@ -16,16 +16,13 @@ Motor rightMotor(2
 
 //imperical data of the form {voltage reading (int), distance (cm)} 
 //used to get distance from sensor reading
-//int calibrationData[][2] = {{0,40},{27,20},{58,15},{139,10},{396,5},{455,4}};short range sensor data
+//close range sensor data: int calibrationData[][2] = {{0,40},{27,20},{58,15},{139,10},{396,5},{455,4}};short range sensor data
 int calibrationData[][2] = {{0,200},{94,70},{110,60},{126,50},{149,40},{188,30},{268,20},{305,17},{341,15},{414,12},{487,10},{638,7}};
-//velocity when moving forward
-int defaultVel = 255;//out of 255
-int maxDelta = 510;
+
+int maxDelta = 510;//max allowable difference in speed between motors
 
 //this script uses proportional control to maintain distance to the wall
-//the controller was discretized into two regions, one for when the robot is too close,
-//and one for when it is too far. The two gains for the proportional controller are defined below
-float k = 6;
+float k = 6;//gain of our p controller
 
 //wall follower target distance to wall (cm)
 float targetDistance = 45.0;
@@ -57,18 +54,15 @@ void setup()
   pinMode(rangeSensorPin, INPUT);
   pinMode(photoResPin, INPUT_PULLUP);
 
-  //wait until we sense the light
+//  wait until we sense the light
   while(analogRead(photoResPin)>photoResThreshold)
   {
   }
-
-   //start moving forward at default velocity without turning
-  resetVel();
 }
 
 void loop()
 {
-  //print() checks if we want to print this frame, and will set this var to true if we do
+  //printValue() checks if we want to print this frame, and will set this var to true if we do
   printThisFrame = false;
   
   
@@ -76,19 +70,14 @@ void loop()
   
   float error = (targetDistance-distance);//error used for proportional control
 
-//  //discretize the controller
-//  if (error > 0)//error>0 means we are too far from the wall
-//  {
-//    k = farGain;
-//  } else
-//  {
-//    k = closeGain;
-//  }
-
-  //sets appropriate change in velocities of motors
+  //delta is the difference in speed between the motors (makes the motors turn)
   float delta =  error*k;
+
+  //saturate delta value
   if (delta>maxDelta) {delta = maxDelta;}
   if (delta<-maxDelta) {delta = -maxDelta;}
+
+  
   //printValue(delta);
   setDelta(delta);
 
@@ -100,17 +89,13 @@ void loop()
 }
 
 
-void resetVel()
-{
-  //makes the motors move forward at default velocity
-  setVel(defaultVel);
-  setDelta(0);
-}
-
 void setDelta(float delta)
 {
+  
   //delta is the variation in speed between motors (added/subtracted to their nominal speed)
-  setVel(255-abs(int(delta/2)));
+  
+  setVel(255-abs(int(delta/2)));//this makes sure one motor always turns at max speed
+  
   //distribute the speed delta evenly accross the two motors
   rightMotor.setDelta(delta/2);
   leftMotor.setDelta(-delta/2);
