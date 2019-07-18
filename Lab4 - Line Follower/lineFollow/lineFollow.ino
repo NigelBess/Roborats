@@ -21,13 +21,8 @@ unsigned long int turnTime = 50;//ms per step
 unsigned long int turnEndTime = 0;
 unsigned long int numSteps;
 int lastDirection;
-int pauseTime = 100;
-bool wasOnLineLastLoop = false;
-int resetTurnTime = 400;
-unsigned long int centeringStartTime = 0;
-const int maxCenteringTime = 1000;
 
-int irSenseThreshold = 700;//value greater than this means we are over line
+int irSenseThreshold = 500;//value greater than this means we are over line
 
 //how often do we want to print while we are in debug mode?
 const int serialRefreshTime = 1000;//ms
@@ -92,8 +87,7 @@ void loop()
     case searching:
       if (isOverLine())
       {
-        state = centering;
-        centeringStartTime = thisLoopTime;
+        state = following;
         break;
       }
        if(thisLoopTime>turnEndTime)
@@ -103,21 +97,12 @@ void loop()
         numSteps++;
         turnEndTime = thisLoopTime + numSteps*turnTime;
       }
-    case centering:
-      if (!isOverLine()|| thisLoopTime > (centeringStartTime + maxCenteringTime))
-      {
-        int turnBackTime = (thisLoopTime - centeringStartTime)/2;
-        turn(-lastDirection);
-        delay(turnBackTime);
-        state = following;
-      }
   }
   printValue(int(state));
 }
 
 bool isOverLine()
 {
-  //return analogRead(irSensorPin)>1.5*analogRead(potPin);
   return analogRead(irSensorPin)>irSenseThreshold;
 }
 
