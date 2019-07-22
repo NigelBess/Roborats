@@ -1,19 +1,18 @@
 #ifndef GameEngine_H
 #define GameEngine_H
 #include "GameObject.h"
-//#include "Debugger.h"
 class GameEngine
 {
   private:
   GameObject **objects;
-  Debugger *debugger;
+  GameObject *debugger;
   unsigned long int thisLoopTime;
   unsigned long int lastLoopTime;
-  uint8_t refreshTime = 100;//ms  
+  uint8_t refreshTime = 10;//ms  
   int numObjects;
   public:
   GameEngine(){}
-  void Initialize(int quantity, GameObject *o[], Debugger *d)
+  void Initialize(int quantity, GameObject *o[], GameObject *d)
   {
     objects = new GameObject*[quantity];
     for (int i = 0; i < quantity; i++)
@@ -40,10 +39,15 @@ class GameEngine
     lastLoopTime = thisLoopTime;
     for (int i = 0; i < numObjects; i++)
     {
-      (*objects[i]).Update(dt);
+      if((*objects[i]).enabled)
+      {
+        (*objects[i]).BaseUpdate(dt);
+        (*objects[i]).Update(dt);
+      }
     }
     (*debugger).Update(dt);
-    delay(refreshTime-(millis()-thisLoopTime));
+    delay(refreshTime);
+
   }
   int getNumObjects()
   {

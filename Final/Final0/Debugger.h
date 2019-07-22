@@ -1,7 +1,9 @@
 #ifndef Debugger_H
 #define Debugger_H
 
-class Debugger
+#include "GameObject.h"
+
+class Debugger : public GameObject
 {
   private:
     unsigned long int nextPrintTime = 0;
@@ -13,23 +15,24 @@ class Debugger
   {
    on = debugMode;
   }
-  void Awake()
+  void Awake() override
   {
     Serial.begin(9600);
     printedThisLoop = true;
     Print("Debugger is on");
   }
-  void Update(int dt)
+  void Update(int dt) override
   {
     printedThisLoop = false;
   }
-  void Print(String msg)
+  
+  void Print(String msg,bool force) override
   {
     if (!on)
     {
       return;
     }
-    if (!printedThisLoop)
+    if (!printedThisLoop && !force)
     {
       if(millis()<nextPrintTime)
       {
@@ -37,16 +40,13 @@ class Debugger
       }
       Serial.println("");
     }
+    printedThisLoop = true;
     nextPrintTime = millis()+refreshTime;
     Serial.println(msg); 
   }
-  void Print(int msg)
+  void Print(String msg) override
   {
-    Print(String(msg));
-  }
-  void Print(float msg)
-  {
-    Print(String(msg));
+    Print(msg,false);
   }
   void setRefreshTime(int ms)
   {

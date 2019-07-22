@@ -1,30 +1,64 @@
 #ifndef GameObject_H
 #define GameObject_H
-#include "Debugger.h"
 class GameObject
 {
+  protected:
+  GameObject *debugger;
+  
   public:
-  bool enabled;
-  Debugger *debugger;
+  bool enabled = true;
   virtual void Awake(){}
   virtual void Update(int dt){}
-  void setDebugger(Debugger *d)
+  virtual void BaseUpdate(int dt) {}
+  void setDebugger(GameObject *d)
   {
     debugger = d;
     (*d).Print("added to gameobject");
   }
   GameObject(){}
-  void Print(String msg)
+  virtual void Print(String msg,bool force)
   {
-    (*debugger).Print(msg);
+    (*debugger).Print(msg,force);
   }
-  void Print(int msg)
+  
+  virtual void Print(String msg)
   {
-    (*debugger).Print(msg);
+    Print(msg, false);
   }
-  void Print(float msg)
+ 
+
+  
+  virtual void Print(int msg,bool force)
   {
-    (*debugger).Print(msg);
-  } 
+    Print(String(msg),force);
+  }
+  virtual void Print(int msg)
+  {
+    Print(String(msg),false);
+  }
+  
+  virtual void Print(float msg,bool force)
+  {
+    Print(String(msg),force);
+  }  
+  virtual void Print(float msg)
+  {
+    Print(String(msg),false);
+  }
+  
+  float sign(float var)
+  {
+    if (var == 0)
+    {
+      return 0;
+    }
+    if (var<0)
+    {
+      return -1;
+    }
+    return 1;
+  }
+  
+  
 };
 #endif

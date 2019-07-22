@@ -3,7 +3,7 @@
 class MyMath
 {
   public:
-  static int sign(int var)
+  static float sign(float var)
   {
     if (var == 0)
     {

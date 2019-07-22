@@ -2,44 +2,78 @@
 #define ServoObj_H
 
 #include <Servo.h>
-#include "MyMath.h"
-#include "GameObject.h"
+#include "Motor.h"
 
-class ServoObj : public GameObject
+class ServoObj : public Motor
 {
   private:
-  Servo thisServo;
-  float currentPos = 0;
-  float vel = 100;//degree/s
+  int pin;
+  Servo servo;
+
+  float currentPos = 0;//degree
+  float targetPos = 0;
+  float nextTargetPos = -1;
+  float maxPos = 180;
+  float minPos = 0;
+  uint8_t posThreshold = 1;
+  
   public:
-  ServoObj(int pin)
+  ServoObj(int pinNum)
   {
-    thisServo.attach(pin);
+    pin = pinNum;
+     servo.write(0);
   }
   void Awake() override
   {
+    servo.attach(pin);
     Print("servo awake");
   }
-  
-  void Update(int dt) override
+  void BaseUpdate(int dt) override
   {
-    Print(currentPos);
-    move(vel*float(dt)/float(1000));
-    if (currentPos>=180 || currentPos <=0)
+    Motor::BaseUpdate(dt);
+    if (abs(currentPos - targetPos) < posThreshold)
     {
-      vel = -vel;
+      currentPos = targetPos;
+      setTargetPos(nextTargetPos);
+      return;
     }
-  }
-  void move(float amount)
-  {
-    setPos(currentPos + amount);
+    float expectedDestinationTime = (targetPos-currentPos)/currentVel;
+    float deAccelTime = abs(currentVel)/accel;
+    if (deAccelTime>=expectedDestinationTime)
+    {
+      currentVel -= 2*dt*accel/1000*sign(currentVel);
+    }
+    float dp = currentVel*dt/1000;
+    currentPos += dp;
+    applyPos(currentPos);
   }
   void setPos(float pos)
   {
+    pos = MyMath::clamp(pos,minPos,maxPos);
+    currentPos = pos;
+    setTargetPos(pos);
+  }
+  void setTargetPos(float pos)
+  {
+    targetPos = pos;
+    if (targetPos!=currentPos)
+    {
+      setTargetVel(abs(targetVel)*sign(targetPos - currentPos));
+    }
+    if (nextTargetPos == -1)
+    {
+      nextTargetPos = targetPos;
+    }
+  }
+  void setNextTargetPos(float pos)
+  {
+    nextTargetPos = pos;
+  }
+  void applyPos(float pos)
+  {
     pos = MyMath::clamp(pos,0,180);
     currentPos = pos;
-    Print(pos);
-    thisServo.write((int)pos);
+    servo.write(pos);
   }
   float getPos()
   {
