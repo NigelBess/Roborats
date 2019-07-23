@@ -4,6 +4,8 @@
 #include "MyMath.h"
 #include "GameObject.h"
 
+//This class is intended as a superclass for servos and DCMotors.
+//It keeps track of velocity and acceleration information
 class Motor : public GameObject
 {
   protected :

@@ -31,6 +31,15 @@ class FullDistanceController
     (*right).enabled = state;
     (*left).enabled = state;
   }
+  void go(float distance)
+  {
+    (*right).go(distance);
+    (*left).go(distance);
+  }
+  bool hasArrived()
+  {
+    return ((*right).hasArrived() || (*left).hasArrived());
+  }
   
 };
 #endif

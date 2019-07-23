@@ -31,6 +31,14 @@ class Encoder : public GameObject
       direction = -1;
     }
   }
+  void reset(int value)
+  {
+    count = value;
+  }
+  void reset()
+  {
+    reset(0);
+  }
   int getCount()
   {
     return count;

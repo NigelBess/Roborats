@@ -1,46 +1,68 @@
-#ifndef DistanceController_H
-#define DistanceController_H
+#ifndef WallFollower_H
+#define WallFollower_H
 #include "DCMotor.h"
-#include "Encoder.h"
+#include "RangeSensor.h"
 
-class DistanceController : public GameObject
+class WallFollower : public GameObject
 {
   protected :
-    DCMotor* motor;
-    Encoder* encoder;
-    float k;
-    float targetPos = 0;
-    float metersPerTick = 0;
-    const int maxOutput= 255;
-    
-  
+    DCMotor* rightMotor;
+    DCMotor* leftMotor;
+    RangeSensor* sensor;
+    int direction = 1;
+    float k = 30.0;
+    int maxDelta;
+    float targetDistance = 40;
   public:
-  DistanceController(DCMotor* mot, Encoder* enc, float gain)
+  WallFollower(DCMotor* right, DCMotor* left)
   {
-    motor = mot;
-    encoder = enc;
+    rightMotor = right;
+    leftMotor = left;
+  }
+  void setSensor(RangeSensor* sense)
+  {
+    sensor = sense;
+  }
+  void setDirection(int dir)
+  {
+    if (dir<0)
+    {
+      direction = -1;
+    } else 
+    {
+      direction = 1;
+    }
+  }
+  void setGain(float gain)
+  {
     k = gain;
   }
-  void setTargetPos(float target)
+  void setTargetDistance(float distance)
   {
-    targetPos = target;
+    targetDistance = distance;
   }
   void Update(int dt) override
   {
-    float currentPos = float((*encoder).getCount())*metersPerTick;
-    float error = targetPos - currentPos;
-    int output = int(error*k);
-    if (abs(output) > maxOutput)
-    {
-      output = maxOutput*sign(output);
-    }
-    Print("controller output");
-    Print(output);
-    (*motor).setTargetVel(output); 
+    if (sensor == NULL) {return;}
+    float distance = (*sensor).getDistance();
+    float error = (targetDistance - distance);
+    float delta = error*k*direction;
+
+        //saturate delta value
+    if (delta>maxDelta) {delta = maxDelta;}
+    if (delta<-maxDelta) {delta = -maxDelta;}
+
+    setDelta(delta);
   }
-  void setTicksPerMeter(float tpm)
+  void setMaxDelta(int maxDeltaVal)
   {
-    metersPerTick = 1/tpm;
+    maxDelta = maxDeltaVal;
+  }
+  void setDelta(float delta)
+  {
+    //distribute the speed delta evenly accross the two motors
+    (*rightMotor).setDelta(delta/2);
+    (*leftMotor).setDelta(-delta/2);
   }
   
   
