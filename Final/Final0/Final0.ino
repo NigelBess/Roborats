@@ -7,6 +7,7 @@
 #include "FullDistanceController.h"
 #include "RangeSensor.h"
 #include "WallFollower.h"
+#include "SideMover.h"
 
 
 //pinouts
@@ -22,9 +23,9 @@
 
 #define debugMode true
 
-#define distanceControllerGain 1000
-#define encoderTicksPerMeter 100
-#define motorAcceleration 510 // counts per second
+const int  encoderTicksPerMeter =  125;
+const int distanceControllerGain = 700;
+const float  wallFollowerGain = 30;
 
 ServoObj servo(servoPin);
 Encoder rightEncoder(rightEncoderPin);
@@ -36,7 +37,9 @@ DistanceController leftDistanceController(&leftMotor,&leftEncoder,distanceContro
 FullDistanceController distControl(&rightDistanceController,&leftDistanceController);
 RangeSensor rightRangeSensor(rightRangeSensorPin);
 RangeSensor leftRangeSensor(leftRangeSensorPin);
-WallFollower wallFollower(&rightMotor,&leftMotor);
+WallFollower wallFollower(&rightMotor,&leftMotor,wallFollowerGain);
+SideMover sideMover(&rightMotor,&leftMotor,&rightRangeSensor,&leftRangeSensor,&distControl,&wallFollower);
+
 
 Debugger debug(debugMode);
 GameEngine engine;
@@ -47,36 +50,21 @@ void setup()
   //(instead pass wrapper functions)
   attachEncoderInterrupts();
 
-  //pass references to encoders to motors. The motors set the direction of encoder counts to match the direction of motor rotation
+  //pass references to encoders to the motors. The motors set the direction of encoder counts to match the direction of motor rotation
   rightMotor.setEncoder(&rightEncoder);
   leftMotor.setEncoder(&leftEncoder);
 
   //array of references to game objects
   GameObject *objects[] = {&servo,&rightEncoder,&leftEncoder,&rightMotor,&leftMotor,
-  &rightDistanceController,&leftDistanceController,&rightRangeSensor,&leftRangeSensor,&wallFollower};
+  &rightDistanceController,&leftDistanceController,&rightRangeSensor,&leftRangeSensor,
+  &wallFollower,&sideMover};
 
   //pass references to game engine
   engine.Initialize(sizeof(objects)/sizeof(objects[0]),objects,&debug);
 
   //calls awake on all gameobjects
   engine.Awake();
-  
-
-  distControl.setTargetPos(1);//m
-  wallFollower.setSensor(&rightRangeSensor);
-  wallFollower.setDirection(right);
-  //  servo.setAccel(100.0);
-  //  servo.setVel(0);
-  //  servo.setTargetVel(100.0);
-  //  servo.setPos(0);
-  //  servo.setTargetPos(90.0);
-  //  servo.setNextTargetPos(0);
-  Motor* motors[] = {&rightMotor,&leftMotor};
-  for (int i = 0; i < 2; i++)
-  {
-    (*motors[i]).setAccel(motorAcceleration);
-    (*motors[i]).setTargetVel(255);
-  }
+  sideMover.goToCheese();
 }
 
 void loop() 
@@ -84,6 +72,24 @@ void loop()
   engine.Update();  
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//encoder stuff
 void attachEncoderInterrupts()
 {
   attachInterrupt(digitalPinToInterrupt(rightEncoderPin),rightCountTick,FALLING);

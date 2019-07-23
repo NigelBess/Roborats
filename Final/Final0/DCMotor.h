@@ -10,6 +10,8 @@ class DCMotor : public Motor
   bool reverse = false;//is the motor polarity reversed?
   int delta;
   Encoder* encoder;
+  const int threshold = 120;
+  const int effectiveZeroSpeed = 1;
   
   public:
   DCMotor(int pin)
@@ -50,8 +52,15 @@ class DCMotor : public Motor
   void applyVel() override
   {
     int vel = currentVel + int(delta);
+    int cappedSpeed = min(abs(vel),255);
+    int mappedSpeed = map(cappedSpeed,0,255,threshold,255);
+    if(abs(vel)<=effectiveZeroSpeed)
+    {
+      mappedSpeed = 0;
+      vel = 0;
+    }
     
-    (*motorObj).setSpeed(min(abs(vel),255));// set speed appropriately and saturate to 255
+    (*motorObj).setSpeed(mappedSpeed);
     if(encoder!=NULL)
     {
       (*encoder).setDirection(sign(vel));

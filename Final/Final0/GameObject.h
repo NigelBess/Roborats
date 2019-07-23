@@ -58,6 +58,10 @@ class GameObject
     }
     return 1;
   }
+  virtual void SetEnabled(bool state)
+  {
+    enabled = false;
+  }
   
   
 };

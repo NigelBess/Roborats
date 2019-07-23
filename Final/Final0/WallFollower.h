@@ -2,6 +2,7 @@
 #define WallFollower_H
 #include "DCMotor.h"
 #include "RangeSensor.h"
+#include "MyMath.h"
 
 class WallFollower : public GameObject
 {
@@ -11,13 +12,20 @@ class WallFollower : public GameObject
     RangeSensor* sensor;
     int direction = 1;
     float k = 30.0;
-    int maxDelta;
+    int maxDelta = 510;
     float targetDistance = 40;
+    bool fullControl = true;
+    int maxSpeed = 255;
+    bool possiblyAtCorner = false;
+    unsigned long int cornerDetectionStartTime = 0;
+    const int cornerDetectionTimeThreshold = 1000;//ms
+    bool atCorner = false;
   public:
-  WallFollower(DCMotor* right, DCMotor* left)
+  WallFollower(DCMotor* right, DCMotor* left, float gain)
   {
     rightMotor = right;
     leftMotor = left;
+    setGain(gain);
   }
   void setSensor(RangeSensor* sense)
   {
@@ -49,9 +57,26 @@ class WallFollower : public GameObject
     float delta = error*k*direction;
 
         //saturate delta value
-    if (delta>maxDelta) {delta = maxDelta;}
-    if (delta<-maxDelta) {delta = -maxDelta;}
-
+    delta = MyMath::saturate(delta,float(maxDelta));
+    Print(delta);
+    if (!atCorner && delta >=maxDelta)
+    {
+      if(!possiblyAtCorner)
+      {
+        possiblyAtCorner = true;
+        cornerDetectionStartTime = millis();
+      } else
+      {
+        if ((millis()-cornerDetectionStartTime)>cornerDetectionTimeThreshold)
+        {
+          atCorner = true;
+        }
+      }
+    } else
+    {
+      atCorner = false;
+      possiblyAtCorner = false;
+    }
     setDelta(delta);
   }
   void setMaxDelta(int maxDeltaVal)
@@ -60,9 +85,23 @@ class WallFollower : public GameObject
   }
   void setDelta(float delta)
   {
+    if (fullControl)
+    {
+      int vel = maxSpeed-abs(delta/2);
+      (*rightMotor).setVel(vel);
+      (*leftMotor).setVel(vel);
+    }
     //distribute the speed delta evenly accross the two motors
     (*rightMotor).setDelta(delta/2);
     (*leftMotor).setDelta(-delta/2);
+  }
+  void allowFullVelocityControl(bool state)
+  {
+    fullControl = state;
+  }
+  bool isAtCorner()
+  {
+    return atCorner;
   }
   
   

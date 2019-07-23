@@ -43,7 +43,8 @@ class RangeSensor: public GameObject
   float getDistance()
   {
     //uses calibration table to interpolate from the analog signal
-    return interpolateFromCalibration(analogRead(pin));
+    float d = interpolateFromCalibration(analogRead(pin));
+    return d;
   }
   
 };

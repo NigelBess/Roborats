@@ -13,7 +13,8 @@ class DistanceController : public GameObject
     float metersPerTick = 0;
     const int maxOutput= 255;
     float arrivedThreshold = 0.01;
-    bool arrived;
+    bool arrived = true;
+    bool active = true;
     
   
   public:
@@ -31,20 +32,29 @@ class DistanceController : public GameObject
   void setTargetPos(float target)
   {
     targetPos = target;
+    arrived = false;
   }
   void Update(int dt) override
   {
     float currentPos = float((*encoder).getCount())*metersPerTick;
     float error = targetPos - currentPos;
-    arrived = (error<arrivedThreshold);
+    if (!arrived)
+    {
+      arrived = (error<arrivedThreshold);
+      if (arrived)
+      {
+        Print("reached destination!",true);
+      }
+    }
     int output = int(error*k);
     if (abs(output) > maxOutput)
     {
       output = maxOutput*sign(output);
     }
-    Print("controller output");
-    Print(output);
-    (*motor).setTargetVel(output); 
+    if (active)
+    {
+      (*motor).setTargetVel(output);
+    } 
   }
   void setTicksPerMeter(float tpm)
   {
@@ -54,6 +64,10 @@ class DistanceController : public GameObject
   {
     (*encoder).reset();
     setTargetPos(distance);
+  }
+  void applyControl(bool state)
+  {
+    active = state;
   }
   
   

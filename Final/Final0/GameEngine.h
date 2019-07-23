@@ -1,6 +1,8 @@
 #ifndef GameEngine_H
 #define GameEngine_H
 #include "GameObject.h"
+
+//this class allows us to use a game engine architecture in arduino
 class GameEngine
 {
   private:
@@ -8,7 +10,7 @@ class GameEngine
   GameObject *debugger;
   unsigned long int thisLoopTime;
   unsigned long int lastLoopTime;
-  uint8_t refreshTime = 10;//ms  
+  uint8_t refreshTime = 1;//ms  
   int numObjects;
   public:
   GameEngine(){}
