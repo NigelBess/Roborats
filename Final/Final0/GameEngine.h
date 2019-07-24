@@ -6,8 +6,8 @@
 class GameEngine
 {
   private:
-  GameObject **objects;
-  GameObject *debugger;
+  GameObject** objects;
+  GameObject* debugger;
   unsigned long int thisLoopTime;
   unsigned long int lastLoopTime;
   uint8_t refreshTime = 1;//ms  

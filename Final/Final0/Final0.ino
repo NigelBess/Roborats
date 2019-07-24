@@ -8,14 +8,19 @@
 #include "RangeSensor.h"
 #include "WallFollower.h"
 #include "SideMover.h"
-
+#include "LineSensor.h"
+#include "Grabber.h"
+#include "MainStateMachine.h"
 
 //pinouts
-#define servoPin 10
 #define rightEncoderPin 2
 #define leftEncoderPin 3
 #define rightRangeSensorPin A0
 #define leftRangeSensorPin A1
+#define rightLineSensorPin A2
+#define leftLineSensorPin A3
+#define armServoPin 10
+#define handServoPin 9
 
 #define right 1
 #define left -1
@@ -23,22 +28,23 @@
 
 #define debugMode true
 
-const int  encoderTicksPerMeter =  125;
-const int distanceControllerGain = 700;
-const float  wallFollowerGain = 30;
-
-ServoObj servo(servoPin);
 Encoder rightEncoder(rightEncoderPin);
 Encoder leftEncoder(leftEncoderPin);
+LineSensor rightLineSensor(rightLineSensorPin);
+LineSensor leftLineSensor(leftLineSensorPin);
 DCMotor rightMotor(3);
 DCMotor leftMotor(4);
-DistanceController rightDistanceController(&rightMotor,&rightEncoder,distanceControllerGain,encoderTicksPerMeter);
-DistanceController leftDistanceController(&leftMotor,&leftEncoder,distanceControllerGain,encoderTicksPerMeter);
+ServoObj armServo(armServoPin);
+ServoObj handServo(handServoPin);
+DistanceController rightDistanceController(&rightMotor,&rightEncoder);
+DistanceController leftDistanceController(&leftMotor,&leftEncoder);
 FullDistanceController distControl(&rightDistanceController,&leftDistanceController);
 RangeSensor rightRangeSensor(rightRangeSensorPin);
 RangeSensor leftRangeSensor(leftRangeSensorPin);
-WallFollower wallFollower(&rightMotor,&leftMotor,wallFollowerGain);
-SideMover sideMover(&rightMotor,&leftMotor,&rightRangeSensor,&leftRangeSensor,&distControl,&wallFollower);
+WallFollower wallFollower(&rightMotor,&leftMotor);
+SideMover sideMover(&rightMotor,&leftMotor,&rightRangeSensor,&leftRangeSensor,&distControl,&wallFollower,&rightLineSensor);
+Grabber grabber(&armServo,&handServo);
+MainStateMachine robot(&grabber);
 
 
 Debugger debug(debugMode);
@@ -55,21 +61,31 @@ void setup()
   leftMotor.setEncoder(&leftEncoder);
 
   //array of references to game objects
-  GameObject *objects[] = {&servo,&rightEncoder,&leftEncoder,&rightMotor,&leftMotor,
+  GameObject *objects[] = {&rightEncoder,&leftEncoder,&rightMotor,&leftMotor,
   &rightDistanceController,&leftDistanceController,&rightRangeSensor,&leftRangeSensor,
-  &wallFollower,&sideMover};
+  &wallFollower,&sideMover,&rightLineSensor,&leftLineSensor,&armServo,&handServo,&grabber,&robot};
 
   //pass references to game engine
   engine.Initialize(sizeof(objects)/sizeof(objects[0]),objects,&debug);
 
   //calls awake on all gameobjects
   engine.Awake();
-  sideMover.goToCheese();
+
+  
+  robot.setMover(&sideMover);
+  //x       robot.collectCheese();
+  //grabber.grabCheese();
+  armServo.setTargetPos(180);
+  handServo.setTargetPos(90);
 }
 
 void loop() 
 {
-  engine.Update();  
+  engine.Update();
+  if(armServo.hasArrived())
+  {
+    armServo.setTargetPos(0);
+  }  
 }
 
 

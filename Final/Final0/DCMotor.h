@@ -12,6 +12,8 @@ class DCMotor : public Motor
   Encoder* encoder;
   const int threshold = 120;
   const int effectiveZeroSpeed = 1;
+  const int mainSpeed = 255;
+  const int  motorAcceleration = 510; // counts per second
   
   public:
   DCMotor(int pin)
@@ -41,7 +43,8 @@ class DCMotor : public Motor
   }
   void Awake() override
   {
-    
+    setAccel(motorAcceleration);
+    setTargetVel(0);
   }
   void setDelta(float value)
   {

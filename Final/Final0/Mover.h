@@ -29,5 +29,15 @@ class Mover : public GameObject
     (*rightMotor).setDelta(delta);
     (*leftMotor).setDelta(delta);
   }
+  virtual bool isWaiting()
+  {
+    return false;
+  }
+  virtual void goToCheese()
+  {
+  }
+  virtual void returnFromCheese()
+  {
+  }
 };
 #endif

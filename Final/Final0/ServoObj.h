@@ -10,12 +10,14 @@ class ServoObj : public Motor
   int pin;
   Servo servo;
 
+  const int mainSpeed = 100;//degree per second
+  const int  motorAcceleration = 40; //degree per second squared
   float currentPos = 0;//degree
   float targetPos = 0;
-  float nextTargetPos = -1;
   float maxPos = 180;
   float minPos = 0;
-  uint8_t posThreshold = 1;
+  float posThreshold = 0.1;
+  bool arrived = true;
   
   public:
   ServoObj(int pinNum)
@@ -27,17 +29,20 @@ class ServoObj : public Motor
   {
     servo.attach(pin);
     Print("servo awake");
+    setAccel(motorAcceleration);
+    setTargetVel(mainSpeed);
   }
   void BaseUpdate(int dt) override
   {
     Motor::BaseUpdate(dt);
+    Print(currentPos);
     if (abs(currentPos - targetPos) < posThreshold)
     {
+      arrived = true;
       currentPos = targetPos;
-      setTargetPos(nextTargetPos);
       return;
     }
-    float expectedDestinationTime = (targetPos-currentPos)/currentVel;
+    float expectedDestinationTime = abs((targetPos-currentPos)/currentVel);
     float deAccelTime = abs(currentVel)/accel;
     if (deAccelTime>=expectedDestinationTime)
     {
@@ -47,12 +52,6 @@ class ServoObj : public Motor
     currentPos += dp;
     applyPos(currentPos);
   }
-  void setPos(float pos)
-  {
-    pos = MyMath::clamp(pos,minPos,maxPos);
-    currentPos = pos;
-    setTargetPos(pos);
-  }
   void setTargetPos(float pos)
   {
     targetPos = pos;
@@ -60,24 +59,23 @@ class ServoObj : public Motor
     {
       setTargetVel(abs(targetVel)*sign(targetPos - currentPos));
     }
-    if (nextTargetPos == -1)
-    {
-      nextTargetPos = targetPos;
-    }
-  }
-  void setNextTargetPos(float pos)
-  {
-    nextTargetPos = pos;
+    arrived = false;
+     Print("Current position is now this value after changing target, " + String(currentPos),true);
   }
   void applyPos(float pos)
   {
-    pos = MyMath::clamp(pos,0,180);
+    if (pos>180) {pos = 180;}
+    if (pos<0) {pos = 0;}
     currentPos = pos;
     servo.write(pos);
   }
   float getPos()
   {
     return currentPos;
+  }
+  bool hasArrived()
+  {
+    return arrived;
   }
 };
 #endif

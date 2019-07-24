@@ -11,9 +11,9 @@ class WallFollower : public GameObject
     DCMotor* leftMotor;
     RangeSensor* sensor;
     int direction = 1;
-    float k = 30.0;
-    int maxDelta = 510;
-    float targetDistance = 40;
+    const float k = 20.0;
+    const int maxDelta = 510;
+    const float targetDistance = 50;
     bool fullControl = true;
     int maxSpeed = 255;
     bool possiblyAtCorner = false;
@@ -21,11 +21,10 @@ class WallFollower : public GameObject
     const int cornerDetectionTimeThreshold = 1000;//ms
     bool atCorner = false;
   public:
-  WallFollower(DCMotor* right, DCMotor* left, float gain)
+  WallFollower(DCMotor* right, DCMotor* left)
   {
     rightMotor = right;
     leftMotor = left;
-    setGain(gain);
   }
   void setSensor(RangeSensor* sense)
   {
@@ -41,14 +40,6 @@ class WallFollower : public GameObject
       direction = 1;
     }
   }
-  void setGain(float gain)
-  {
-    k = gain;
-  }
-  void setTargetDistance(float distance)
-  {
-    targetDistance = distance;
-  }
   void Update(int dt) override
   {
     if (sensor == NULL) {return;}
@@ -58,7 +49,6 @@ class WallFollower : public GameObject
 
         //saturate delta value
     delta = MyMath::saturate(delta,float(maxDelta));
-    Print(delta);
     if (!atCorner && delta >=maxDelta)
     {
       if(!possiblyAtCorner)
@@ -78,10 +68,6 @@ class WallFollower : public GameObject
       possiblyAtCorner = false;
     }
     setDelta(delta);
-  }
-  void setMaxDelta(int maxDeltaVal)
-  {
-    maxDelta = maxDeltaVal;
   }
   void setDelta(float delta)
   {

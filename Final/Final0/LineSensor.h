@@ -4,7 +4,7 @@ class LineSensor: public GameObject
 {
   protected:
     int pin;
-    const int threshold = 
+    const int threshold = 500;
   public:
   LineSensor(int pinNum)
   {
@@ -14,10 +14,9 @@ class LineSensor: public GameObject
   {
     pinMode(pin,INPUT_PULLUP);
   }
-  float getDistance()
+  bool isOverLine()
   {
-    //uses calibration table to interpolate from the analog signal
-    return interpolateFromCalibration(analogRead(pin));
+    return (analogRead(pin)>threshold);
   }
   
 };
