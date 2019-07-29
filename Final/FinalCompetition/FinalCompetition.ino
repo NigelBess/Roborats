@@ -11,7 +11,6 @@
 #include "LineSensor.h"
 #include "Grabber.h"
 #include "MainStateMachine.h"
-#include "SoloCompRobot.h"
 
 //pinouts
 #define rightEncoderPin 2
@@ -21,8 +20,8 @@
 #define rightLineSensorPin A2
 #define leftLineSensorPin A3
 #define photoResPin A4
-#define armServoPin 10
-#define handServoPin 9
+#define armServoPin 9
+#define handServoPin 10
 
 #define right 1
 #define left -1
@@ -46,9 +45,9 @@ FullDistanceController distControl(&rightDistanceController,&leftDistanceControl
 RangeSensor rightRangeSensor(rightRangeSensorPin);
 RangeSensor leftRangeSensor(leftRangeSensorPin);
 WallFollower wallFollower(&rightMotor,&leftMotor);
-SideMover sideMover(&rightMotor,&leftMotor,&rightRangeSensor,&leftRangeSensor,&distControl,&wallFollower,&rightLineSensor);
+SideMover sideMover(&rightMotor,&leftMotor,&rightRangeSensor,&leftRangeSensor,&distControl,&wallFollower,&rightLineSensor,&leftLineSensor);
 Grabber grabber(&armServo,&handServo);
-SoloCompRobot soloRobot(&distControl, &wallFollower, &rightEncoder, &leftEncoder);
+MainStateMachine robot(&grabber);
 
 Debugger debug(debugMode);
 GameEngine engine;
@@ -67,7 +66,7 @@ void setup()
   GameObject* objects[] = {&rightEncoder,&leftEncoder,&rightMotor,&leftMotor,
   &rightDistanceController,&leftDistanceController,&rightRangeSensor,&leftRangeSensor,
   &wallFollower,&sideMover,&rightLineSensor,&leftLineSensor,&armServo,&handServo,
-  &grabber,&soloRobot};
+  &grabber,&robot};
 
   //pass references to game engine
   engine.Initialize(sizeof(objects)/sizeof(objects[0]),objects,&debug);
@@ -77,23 +76,27 @@ void setup()
        while(analogRead(photoResPin)>photoResThreshold)
       {
       }
-    }
-  debug.Print("start!!!",true);
+   }
+  Serial.println("start!!!");
   //calls awake on all gameobjects
   engine.Awake();
- 
-  wallFollower.setSensor(&rightRangeSensor);
-  wallFollower.setDirection(right);
-  distControl.setEnabled(false);
-  soloRobot.collectCheese();                                                                                                      
+  robot.setMover(&sideMover);
+  robot.collectCheese();
+  //grabber.grabCheese();
+  //sideMover.go(1.0);                                                                                                  
 
 }
 
 void loop() 
 {
-  rightEncoder.printCount();
-  leftEncoder.printCount();
+  
   engine.Update(); 
+  if(!(Serial.available()>0))
+  {
+    return;
+  }
+  int pos = Serial.parseInt();
+  armServo.setTargetPos(pos);
 }
 
 

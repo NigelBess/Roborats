@@ -9,13 +9,19 @@ class SideMover : public Mover
   protected :
     const float estimatedWallFollowDistanceToCheese = 1.5;//meters
     const float estimatedReturnDistance = 1.5;//meters
+    const float distanceAfterLine = 0;
+    const float unstuckDistance = 0.05;
 
+    unsigned long int unstuckStartTime = 0;
+    const int maxUnstuckTime = 1000;//ms
+    
     int side = right;
     RangeSensor* rightRangeSensor;
     RangeSensor* leftRangeSensor;
     FullDistanceController* distControl;
     WallFollower* wallFollower;
-    LineSensor* lineSensor;
+    LineSensor* rightLineSensor;
+   LineSensor* leftLineSensor;
     
     enum State
     {
@@ -24,12 +30,15 @@ class SideMover : public Mover
       returnFollow,
       turningToWall,
       waiting,
+      goingSetDistance,
+      gettingUnstuck,
     };
     State state = waiting;
+    State previousState = waiting;
       
   public:
   
-  SideMover(DCMotor* rightM, DCMotor* leftM, RangeSensor* rrs, RangeSensor* lrs, FullDistanceController* dc, WallFollower* wf,LineSensor* ls)
+  SideMover(DCMotor* rightM, DCMotor* leftM, RangeSensor* rrs, RangeSensor* lrs, FullDistanceController* dc, WallFollower* wf,LineSensor* rls,LineSensor* lls)
   {
     rightMotor = rightM;
     leftMotor = leftM;
@@ -37,24 +46,47 @@ class SideMover : public Mover
     wallFollower = wf;
     rightRangeSensor = rrs;
     leftRangeSensor = lrs;
-    lineSensor = ls;
+    rightLineSensor = rls;
+    leftLineSensor = lls;
   }
   void Update(int dt) override
   {
+//    if(state!=waiting && (*distControl).isStuck())
+//    {
+//      previousState = state;
+//      unstuckStartTime = millis();
+//      (*distControl).go(-unstuckDistance);
+//      state = gettingUnstuck;
+//    }
     switch (state)
     {
+      case gettingUnstuck:
+        if ((*distControl).hasArrived() || (millis()-unstuckStartTime)>maxUnstuckTime)
+        {
+          state = previousState;
+        }
+      break;
       case firstWallFollow:
-        if ((*distControl).hasArrived() && (*lineSensor).isOverLine())
+        if ((*distControl).hasArrived() && ((*leftLineSensor).isOverLine() || (*rightLineSensor).isOverLine()))
         {
           halt();
-          Print("reached the golden cheese!",true);
-          state = waiting;
+          Print("found the line!");
+          go(distanceAfterLine);
+          state = goingSetDistance;
         }
          break;
+     case goingSetDistance:
+      if((*distControl).hasArrived())
+      {
+          halt();
+          Serial.println("reached the golden cheese!");
+          state = waiting;
+      }
+      break;
      case turningBack:
         if ((*distControl).hasArrived())
         {
-          Print("Just finished turning arround",true);
+          Serial.println("Just finished turning arround");
           side = -side;
           followWallForDistance(side,estimatedReturnDistance);
           state = returnFollow;
@@ -63,10 +95,9 @@ class SideMover : public Mover
      case returnFollow:
        if((*distControl).hasArrived())
        {
-          Print("Probably back home now",true);
-          halt();
-          (*distControl).turn(90,side);
-          state = turningToWall;
+         Serial.println("Probably back home now");
+         turn(90,side);
+         state = turningToWall;
        }
        break;
      case turningToWall:
@@ -77,6 +108,11 @@ class SideMover : public Mover
          }
     }
   }
+
+
+
+
+  
   void FollowWall(int direction)
   { 
     
@@ -92,7 +128,7 @@ class SideMover : public Mover
     (*wallFollower).setSensor(sense);
     (*wallFollower).setDirection(direction);
   }
-  void go(float distance)
+  void go(float distance) override
   {
      setDelta(0);
      (*distControl).setEnabled(true);
@@ -100,6 +136,15 @@ class SideMover : public Mover
     (*distControl).applyControl(true);
     (*distControl).go(distance);
   }
+  void turn(float degrees,int direction)
+  {
+    halt();
+    (*distControl).setEnabled(true);
+    (*distControl).applyControl(true);
+    (*distControl).turn(degrees,direction);
+  }
+  
+
   void followWallForDistance(int direction,float distance)
   {
     (*distControl).go(distance);
@@ -112,11 +157,8 @@ class SideMover : public Mover
   }
    void returnFromCheese() override
   {
-    Print("Time to head home from cheese",true);
-    (*distControl).setEnabled(true);
-    (*distControl).turnAround(-side);
-    (*wallFollower).enabled = false;
-    (*distControl).applyControl(true);
+    Serial.println("Time to head home from cheese");
+    turn(160,side);
     state = turningBack;
   }
   void halt()
@@ -129,8 +171,8 @@ class SideMover : public Mover
   }
   void setVel(int vel)
   {
-    (*rightMotor).setTargetVel(vel);
-    (*leftMotor).setTargetVel(vel);
+    (*rightMotor).setVel(vel);
+    (*leftMotor).setVel(vel);
   }
   void setDelta(int delta)
   {
@@ -141,6 +183,5 @@ class SideMover : public Mover
   {
     return (state==waiting);
   }
- 
 };
 #endif

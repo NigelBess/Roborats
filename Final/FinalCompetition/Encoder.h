@@ -4,9 +4,9 @@ class Encoder : public GameObject
 {
   protected:
   int count;
-  int pin;
-  int direction = 1;
-  int stopTimeThreshold = 1000;
+  uint8_t pin;
+  short int direction = 1;
+  short int stopTimeThreshold = 1000;
   int lastCount;
   unsigned long int stopTime = 0;
   bool stopped;

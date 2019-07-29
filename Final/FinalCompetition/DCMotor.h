@@ -11,12 +11,12 @@ class DCMotor : public Motor
   protected :
   AF_DCMotor *motorObj = 0;//points to the motor that this controls
   bool reverse = false;//is the motor polarity reversed?
-  int delta;
+  short int delta;
   Encoder* encoder;
-  const int threshold = 120;
-  const int effectiveZeroSpeed = 1;
-  const int mainSpeed = 255;
-  const int  motorAcceleration = 510; // counts per second
+  const uint8_t threshold = 155;
+  const uint8_t effectiveZeroSpeed = 1;
+  const uint8_t mainSpeed = 255;
+  const short int  motorAcceleration = 510; // counts per second
   
   public:
   DCMotor(int pin)
