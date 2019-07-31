@@ -4,7 +4,7 @@ class LineSensor: public GameObject
 {
   protected:
     uint8_t pin;
-    const short int threshold = 500;
+    short int threshold = 500;
   public:
   LineSensor(int pinNum)
   {
@@ -17,6 +17,10 @@ class LineSensor: public GameObject
   bool isOverLine()
   {
     return (analogRead(pin)>threshold);
+  }
+  void setSensitivity(int sense)
+  {
+    threshold = sense;
   }
   
 };

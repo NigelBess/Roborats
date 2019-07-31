@@ -7,10 +7,10 @@ class Grabber : public GameObject
 {
   protected :
   const uint8_t armDownPos = 0;
-  const uint8_t armUpPos = 45;
-  const uint8_t armForwardPos = 120;
+  const uint8_t armUpPos = 72;
+  const uint8_t armForwardPos = 150;
   const uint8_t handClosedPos = 0;
-  const uint8_t handOpenPos = 180;
+  const uint8_t handOpenPos = 90;
    ServoObj* armServo;
    ServoObj* handServo;
 

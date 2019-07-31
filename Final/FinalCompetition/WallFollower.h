@@ -11,9 +11,9 @@ class WallFollower : public GameObject
     DCMotor* leftMotor;
     RangeSensor* sensor;
     int direction = 1;
-    const float k = 30;
+    const float k = 22;
     const int maxDelta = 510;
-    const float targetDistance = 35;
+    float targetDistance = 32;
     bool fullControl = true;
     int maxSpeed = 255;
     bool possiblyAtCorner = false;
@@ -88,6 +88,10 @@ class WallFollower : public GameObject
   bool isAtCorner()
   {
     return atCorner;
+  }
+  void setDistance(float distance)
+  {
+    targetDistance = distance;
   }
   
   

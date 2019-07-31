@@ -7,12 +7,23 @@
 class SideMover : public Mover
 {
   protected :
-    const float estimatedWallFollowDistanceToCheese = 1.5;//meters
-    const float estimatedReturnDistance = 1.5;//meters
-    const float distanceAfterLine = 0;
+    const float estimatedWallFollowDistanceToCheese = 1.3;//meters
+    const float estimatedReturnDistance = 1.1;//meters
+    const float distanceAfterLine = 0.18;
     const float unstuckDistance = 0.05;
-
-    unsigned long int unstuckStartTime = 0;
+    const float cheeseTurnAmount = 160;
+    const float finalTurnAmount = 50;
+    const float distanceToWallAfterTurn = 0.6;
+    const short int leftLineSenseThreshold = 600;
+    const short int rightLineSenseThreshold = 500;
+    
+    const float rightTargetDistance = 33;
+    const float leftTargetDistance = rightTargetDistance;
+    const float backUpDistance = 0.8;
+    const int maxBackUpTime = 4000;
+    const float backUpFromWallDistance = 0.15;
+    unsigned long int timer = 0;
+    int driveToWallTime = 2000;
     const int maxUnstuckTime = 1000;//ms
     
     int side = right;
@@ -21,7 +32,7 @@ class SideMover : public Mover
     FullDistanceController* distControl;
     WallFollower* wallFollower;
     LineSensor* rightLineSensor;
-   LineSensor* leftLineSensor;
+    LineSensor* leftLineSensor;
     
     enum State
     {
@@ -32,6 +43,9 @@ class SideMover : public Mover
       waiting,
       goingSetDistance,
       gettingUnstuck,
+      drivingToWall,
+      backingUpFromCheese,
+      backingUpFromWall,
     };
     State state = waiting;
     State previousState = waiting;
@@ -61,7 +75,7 @@ class SideMover : public Mover
     switch (state)
     {
       case gettingUnstuck:
-        if ((*distControl).hasArrived() || (millis()-unstuckStartTime)>maxUnstuckTime)
+        if ((*distControl).hasArrived() || (millis()- timer)>maxUnstuckTime)
         {
           state = previousState;
         }
@@ -96,19 +110,59 @@ class SideMover : public Mover
        if((*distControl).hasArrived())
        {
          Serial.println("Probably back home now");
-         turn(90,side);
+         turn(finalTurnAmount,side);
          state = turningToWall;
        }
        break;
+     case backingUpFromCheese:
+     if((*distControl).hasArrived() || (millis()- timer)>maxBackUpTime)
+     {
+      turn(cheeseTurnAmount,left);
+      state = turningBack;
+     }
+      break;
      case turningToWall:
         if((*distControl).hasArrived())
          {
+            go(distanceToWallAfterTurn);
+           timer = millis();
+            state = drivingToWall;
+         }
+         break;
+     case drivingToWall:
+        if((*distControl).hasArrived() || (millis()-timer)>driveToWallTime)
+         {
+            go(-backUpFromWallDistance);
+            state = backingUpFromWall;
+         }
+         break;
+     case backingUpFromWall:
+     if((*distControl).hasArrived())
+     {
             halt();
             state = waiting;
-         }
+     }
+      break;
     }
   }
-
+  void setSide(int newSide)
+  {
+    side = newSide;
+    short int sense;
+    float dist;
+    if (side == left)
+    {
+      sense = leftLineSenseThreshold;
+      dist = leftTargetDistance;
+    } else
+    {
+      sense = rightLineSenseThreshold;
+      dist = rightTargetDistance;
+    }
+    (*rightLineSensor).setSensitivity(sense);
+    (*leftLineSensor).setSensitivity(sense);
+    (*wallFollower).setDistance(dist);
+  }
 
 
 
@@ -131,9 +185,12 @@ class SideMover : public Mover
   void go(float distance) override
   {
      setDelta(0);
+     
      (*distControl).setEnabled(true);
+     (*distControl).applyControl(true);
+     
     (*wallFollower).enabled = false;
-    (*distControl).applyControl(true);
+    
     (*distControl).go(distance);
   }
   void turn(float degrees,int direction)
@@ -158,8 +215,10 @@ class SideMover : public Mover
    void returnFromCheese() override
   {
     Serial.println("Time to head home from cheese");
-    turn(160,side);
-    state = turningBack;
+    state = backingUpFromCheese;
+    timer = millis();
+    go(-backUpDistance);
+    
   }
   void halt()
   {

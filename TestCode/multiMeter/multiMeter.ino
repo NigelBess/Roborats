@@ -1,4 +1,4 @@
-#define inputPin A4
+#define inputPin A5
 
 //used to decrease Serial print rate
 const int serialRefreshTime = 100;//ms
@@ -6,7 +6,7 @@ int lastPrintTime = 0;
 
 void setup() 
 {
-  pinMode(inputPin, INPUT_PULLUP);
+  pinMode(inputPin, INPUT);
   Serial.begin(9600);
 }
 

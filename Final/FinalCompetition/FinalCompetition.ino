@@ -20,6 +20,7 @@
 #define rightLineSensorPin A2
 #define leftLineSensorPin A3
 #define photoResPin A4
+#define potPin A5
 #define armServoPin 9
 #define handServoPin 10
 
@@ -27,6 +28,8 @@
 #define left -1
 
 const int photoResThreshold = 100;
+const int leftPotReading = 750;
+const int rightPotReading = 160;
 
 #define debugMode true
 #define waitForStartLight false
@@ -78,9 +81,21 @@ void setup()
       }
    }
   Serial.println("start!!!");
+  Mover* mover = 0;
+  pinMode(potPin, INPUT);
+  int potReading = analogRead(potPin);
+  if(potReading>leftPotReading) 
+  {
+    mover = &sideMover;
+    sideMover.setSide(left);
+  } else if (potReading<rightPotReading)
+  {
+    mover = &sideMover;
+    sideMover.setSide(right);
+  }
   //calls awake on all gameobjects
   engine.Awake();
-  robot.setMover(&sideMover);
+  robot.setMover(mover);
   robot.collectCheese();
   //grabber.grabCheese();
   //sideMover.go(1.0);                                                                                                  
@@ -97,6 +112,7 @@ void loop()
   }
   int pos = Serial.parseInt();
   armServo.setTargetPos(pos);
+  handServo.setTargetPos(pos);
 }
 
 
