@@ -1,15 +1,22 @@
 #ifndef MainStateMachine_H
 #define MainStateMachine_H
 
+//this object deals with the cheese collection algorithm at its highest level of abstraction
+
 #include "SideMover.h"
 #include "Grabber.h"
 
 class MainStateMachine : public GameObject
 {
   protected :
+    //references to object controlling wheel motion and object controlling arm motion
     SideMover* mover;
     Grabber* grabber;
+
+    //should the robot get both of the side hanging cheeses?
     bool getBoth = false;
+
+    //state machine states
   enum State
   {
     goingToCheese,
@@ -19,6 +26,8 @@ class MainStateMachine : public GameObject
     resetting,
     waiting,
   };
+
+  
   State state = waiting;
   
   public:
@@ -29,10 +38,15 @@ class MainStateMachine : public GameObject
   }
   void setMover(SideMover* m)
   {
+    //passes reference to side mover object
     mover = m;
   }
+
+  
   void Update(int dt) override
   {
+
+    //state machine
     switch (state)
     {
       case goingToCheese:
@@ -70,15 +84,13 @@ class MainStateMachine : public GameObject
       break;
     }
   }
+  
   void collectCheese()
   {
+    //begins cheese collection algorithm
     (*grabber).wait();
     (*mover).goToCheese();
     state = goingToCheese;
-  }
-  void go(float distance)
-  {
-    (*mover).go(distance);
   }
   void getBothCheeses()
   {

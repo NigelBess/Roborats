@@ -24,7 +24,6 @@ class DCMotor : public Motor
   AF_DCMotor* motorObj = 0;//points to the motor that this controls
   bool reverse = false;//is the motor polarity reversed?
   short int delta;//difference in velocity from nomimal
-  Encoder* encoder;//reference to the encoder on this motor's axis. If it exists,
   //we will define its direction to match the sign of the motors velocity
   
   public:
@@ -38,11 +37,6 @@ class DCMotor : public Motor
     //overload for defining polarity
     setPin(pin);
     reverse = runReverse;
-  }
-  void setEncoder(Encoder* enc)
-  {
-    //passes a reference to encoder enc
-    encoder = enc;
   }
   void setPin(int pin)
   {
@@ -79,10 +73,6 @@ class DCMotor : public Motor
     }
     
     (*motorObj).setSpeed(mappedSpeed);
-    if(encoder!=NULL)
-    {
-      (*encoder).setDirection(sign(vel));
-    }
     //if polarity is reversed, flip the velocity direction
     if (reverse)
     {
